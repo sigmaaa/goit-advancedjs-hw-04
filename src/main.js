@@ -1,24 +1,17 @@
 import iziToast from 'izitoast';
-import SimpleLightbox from 'simplelightbox';
-import { createCardsMarkup } from './js/render-functions';
+import { fetchAndRenderImages } from './js/render-functions';
 
 import 'izitoast/dist/css/iziToast.min.css';
 import 'simplelightbox/dist/simple-lightbox.min.css';
 
-const refs = {
-  searchForm: document.querySelector('form'),
-  gallery: document.querySelector('.gallery'),
-  notFoundText: document.querySelector('.js-not-found-text'),
-  loader: document.querySelector('.loader'),
+import { refs } from './js/consts';
+
+const perPage = 15;
+
+const state = {
+  curPageNum: 1,
+  savedQuery: '',
 };
-
-import { getImages } from './js/pixabay-api';
-
-const lightbox = new SimpleLightbox('.gallery_link', {
-  captionsData: 'alt',
-  captionPosition: 'bottom',
-  captionDelay: 250,
-});
 
 refs.searchForm.addEventListener('submit', function (event) {
   event.preventDefault();
@@ -33,35 +26,14 @@ refs.searchForm.addEventListener('submit', function (event) {
 
     return;
   }
-  setLoading(true);
+  state.savedQuery = query;
+  state.curPageNum = 1;
   refs.gallery.innerHTML = '';
 
-  // Timeout to simulate loading
-  setTimeout(
-    () =>
-      getImages(query)
-        .then(photos => {
-          if (!photos.total) {
-            iziToast.error({
-              title: 'Error',
-              message: `No results for query <span>${query}</span>`,
-              position: 'topRight',
-            });
-            return;
-          }
-          refs.gallery.innerHTML = createCardsMarkup(photos.hits);
-          lightbox.refresh();
-        })
-        .catch(error => console.log(error))
-        .finally(() => setLoading(false)),
-    2000
-  );
+  fetchAndRenderImages(state.savedQuery, state.curPageNum, perPage);
 });
 
-function setLoading(isLoading) {
-  if (isLoading) {
-    refs.loader.classList.add('active');
-  } else {
-    refs.loader.classList.remove('active');
-  }
-}
+refs.loadMoreBtn.addEventListener('click', function (event) {
+  state.curPageNum += 1;
+  fetchAndRenderImages(state.savedQuery, state.curPageNum, perPage);
+});
