@@ -1,5 +1,6 @@
 import SimpleLightbox from 'simplelightbox';
 import { getImages, dataTotalHits } from './pixabay-api';
+import iziToast from 'izitoast';
 import { refs } from './consts';
 
 const lightbox = new SimpleLightbox('.gallery_link', {
